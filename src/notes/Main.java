@@ -1,4 +1,4 @@
-package sample;
+package notes;
 
 import javafx.application.Application;
 import javafx.scene.Group;
@@ -16,7 +16,7 @@ public class Main extends Application {
 
     private Connection db;
     private String dbName = "notes";        // CHANGE DATABASE NAME IF NEEDED
-    private String dbHost = "172.20.8.102"; // CHANGE HOSTMANE. THIS SHOULD BE IN MOST CASES localhost
+    private String dbHost = "172.20.8.102"; // CHANGE HOSTNAME. THIS SHOULD BE IN MOST CASES localhost
     private int dbPort = 3306;              // Change port, if you use different one for your database
     private String dbUser = "notes";        // CHANGE USER IF YOU ARE USING DIFFERENT ONE
     private String dbPass = "mypass";       // CHANGE PASSWORD OF THE USER
