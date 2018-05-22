@@ -1,11 +1,14 @@
 package notes;
 
 import javafx.application.Application;
-import javafx.scene.Group;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +27,10 @@ public class Main extends Application {
 
 
     private ArrayList<Note> notes = new ArrayList<>();
-    private ArrayList<String> neededTables = new ArrayList<>(Arrays.asList(dbPrefix+"sdf", dbPrefix+"notes"));
+    private ArrayList<String> neededTables = new ArrayList<>(Arrays.asList(dbPrefix+"notes"));
+    private TextArea textArea = new TextArea();
+    private ListView<Note> listView;
+    private Note currentNote;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -33,24 +39,8 @@ public class Main extends Application {
         connectDb();
         checkDatabase();
 
-        Group gameGroup = new Group();
-
-        for (int i=0; i<10; i++) {
-            for (int j=0; j<10; j++) {
-                Rectangle rect = new Rectangle(i*40, j*40, 40, 40);
-                rect.setFill(Color.AQUA);
-                rect.setStroke(Color.BLACK);
-
-                gameGroup.getChildren().add(rect);
-            }
-        }
-
-        window.setTitle("Ship destroyer - Login");
-        window.setScene(new Scene(gameGroup, 400, 400));
-        window.show();
-
         getNotes();
-        //buildView();
+        buildView();
     }
 
     private boolean connectDb() throws Exception {
@@ -85,7 +75,7 @@ public class Main extends Application {
 
     private void buildTables() throws Exception {
         Statement stmt = db.createStatement();
-        stmt.executeUpdate("CREATE TABLE `"+dbName+"`.`notes` ( `id` INT(11) NOT NULL AUTO_INCREMENT , `title` VARCHAR(254) NULL , `content` TEXT NOT NULL , `edited` DATETIME NOT NULL , `password` VARCHAR(32) NULL DEFAULT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+        stmt.executeUpdate("CREATE TABLE `"+dbName+"`.`"+dbPrefix+"notes` ( `id` INT(11) NOT NULL AUTO_INCREMENT , `title` VARCHAR(254) NULL , `content` TEXT NOT NULL , `edited` DATETIME NOT NULL , `password` VARCHAR(32) NULL DEFAULT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;");
     }
 
     private void getNotes() throws Exception {
@@ -96,6 +86,77 @@ public class Main extends Application {
             notes.add(new Note(resultSet));
         }
     }
+
+    private void buildView() throws Exception {
+        window.setWidth(500);
+        BorderPane bPane = new BorderPane();
+
+        ObservableList<Note> data = FXCollections.observableArrayList();
+
+        listView = new ListView<>(data);
+        listView.setPrefSize(200, window.getHeight());
+        listView.setMaxWidth(200);
+        listView.setMinWidth(100);
+        listView.setLayoutX(0);
+        listView.setLayoutY(0);
+
+        data.addAll(notes);
+
+        listView.setItems(data);
+        bPane.setLeft(listView);
+
+        textArea.setText("Testilause");
+        textArea.setMinWidth(200);
+        textArea.setPrefWidth(300);
+        textArea.setMaxWidth(1000000);
+        textArea.setWrapText(true);
+
+        bPane.setRight(textArea);
+
+        // Listeners
+        bPane.widthProperty().addListener((ChangeListener) -> textArea.setPrefWidth(window.getWidth() - listView.getWidth()));
+        listView.getSelectionModel().selectedItemProperty().addListener((ObservableValue) -> {
+            try {
+                setCurrentNote(listView.getSelectionModel().getSelectedItem());
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        });
+        textArea.textProperty().addListener((observable, oldValue, newValue) -> {textArea.setPrefWidth(window.getWidth() - listView.getWidth()); textEdited(); });
+
+
+
+        window.setTitle("Notes by Spruur");
+        window.setScene(new Scene(bPane, 500, 400));
+        window.setMinWidth(300);
+        window.setMinHeight(200);
+        window.show();
+    }
+
+    private void textEdited() {
+        currentNote.updateContent(textArea.getText());
+    }
+
+    private void setCurrentNote(Note note) throws Exception {
+        saveCurrentNote();
+        textArea.setPrefWidth(window.getWidth() - listView.getWidth());  // Just in case for screen size fixing.
+
+
+        currentNote = note;
+        textArea.setText(currentNote.getContent());
+    }
+
+    private void saveCurrentNote() throws Exception {
+        if (currentNote != null) {
+            PreparedStatement stmt = db.prepareStatement("UPDATE "+dbPrefix+"notes SET content=?, edited=NOW() WHERE id=?");
+            stmt.setString(1, currentNote.getContent());
+            stmt.setInt(2, currentNote.getId());
+            stmt.executeUpdate();
+        }
+    }
+
+
 
 
     public static void main(String[] args) {
