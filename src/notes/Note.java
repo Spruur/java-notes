@@ -41,5 +41,9 @@ public class Note {
         content = c;
     }
 
-    @Override public String toString() { return title; }
+    @Override public String toString() {
+        if (title != null)
+            return title;
+        return "Note #"+id;
+    }
 }
