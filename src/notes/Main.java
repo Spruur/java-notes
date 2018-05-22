@@ -41,19 +41,35 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         window = primaryStage;
 
-        connectDb();
-        checkDatabase();
+        if (!connectDb()) {
+            window.setTitle("OOPS!");
 
-        getNotes();
-        buildView();
+            VBox dialogVbox = new VBox(20);
+            Label label = new Label("Database connection failed!");
+
+            dialogVbox.getChildren().addAll(label);
+            window.setScene(new Scene(dialogVbox, 200, 100));
+            window.show();
+        }
+        else {
+            checkDatabase();
+
+            getNotes();
+            buildView();
+        }
     }
 
-    private boolean connectDb() throws Exception {
-        Properties info = new Properties();
-        info.put("user", dbUser);
-        info.put("password", dbPass);
-        db = DriverManager.getConnection("jdbc:mysql://"+dbHost+":"+dbPort+"/"+dbName, info);
-        return true;
+    private boolean connectDb()  {
+        try {
+            Properties info = new Properties();
+            info.put("user", dbUser);
+            info.put("password", dbPass);
+            db = DriverManager.getConnection("jdbc:mysql://"+dbHost+":"+dbPort+"/"+dbName, info);
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 
     private void checkDatabase() throws Exception{
