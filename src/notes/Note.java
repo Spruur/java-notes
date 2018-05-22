@@ -36,4 +36,10 @@ public class Note {
     public String getPassword() {
         return password;
     }
+
+    public void updateContent(String c) {
+        content = c;
+    }
+
+    @Override public String toString() { return title; }
 }
