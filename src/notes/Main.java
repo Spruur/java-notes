@@ -23,7 +23,7 @@ public class Main extends Application {
     private String dbPrefix = "notes_by_spruur_";
 
 
-    private String[] notes;
+    private ArrayList<Note> notes = new ArrayList<>();
     private ArrayList<String> neededTables = new ArrayList<>(Arrays.asList(dbPrefix+"sdf", dbPrefix+"notes"));
 
     @Override
@@ -49,8 +49,8 @@ public class Main extends Application {
         window.setScene(new Scene(gameGroup, 400, 400));
         window.show();
 
-        //getNotes();
-        //buildNotesList();
+        getNotes();
+        //buildView();
     }
 
     private boolean connectDb() throws Exception {
@@ -86,6 +86,15 @@ public class Main extends Application {
     private void buildTables() throws Exception {
         Statement stmt = db.createStatement();
         stmt.executeUpdate("CREATE TABLE `"+dbName+"`.`notes` ( `id` INT(11) NOT NULL AUTO_INCREMENT , `title` VARCHAR(254) NULL , `content` TEXT NOT NULL , `edited` DATETIME NOT NULL , `password` VARCHAR(32) NULL DEFAULT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+    }
+
+    private void getNotes() throws Exception {
+        Statement stmt = db.createStatement();
+        ResultSet resultSet = stmt.executeQuery("SELECT * FROM "+dbPrefix+"notes");
+
+        while (resultSet.next()) {
+            notes.add(new Note(resultSet));
+        }
     }
 
 
