@@ -145,14 +145,17 @@ public class Main extends Application {
         Button newButton = new Button("New note");
         newButton.setPrefSize(100, 20);
 
+        Button deleteButton = new Button("Delete");
+        deleteButton.setPrefSize(80, 20);
+
         Button saveButton = new Button("Save");
-        saveButton.setPrefSize(100, 20);
+        saveButton.setPrefSize(60, 20);
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         spacer.setMinSize(10, 1);
 
-        hbox.getChildren().addAll(newButton, spacer, saveButton);
+        hbox.getChildren().addAll(newButton, spacer, deleteButton, saveButton);
         bPane.setBottom(hbox);
 
         // Listeners
@@ -169,6 +172,14 @@ public class Main extends Application {
         saveButton.setOnAction(e -> {
             try {
                 saveCurrentNote();
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        });
+
+        deleteButton.setOnAction(e -> {
+            try {
+                deleteNote();
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
@@ -200,7 +211,8 @@ public class Main extends Application {
         textArea.setPrefWidth(window.getWidth() - listView.getWidth());  // Just in case for screen size fixing.
 
         currentNote = note;
-        textArea.setText(currentNote.getContent());
+        if (currentNote != null)
+            textArea.setText(currentNote.getContent());
     }
 
     private void saveCurrentNote() throws Exception {
@@ -260,6 +272,16 @@ public class Main extends Application {
         }
         else
             throw new Exception("No new data to get!");
+    }
+
+    private void deleteNote() throws Exception {
+        textArea.setText("");
+        if (currentNote != null) {
+            notesList.remove(currentNote);
+
+            Statement stmt = db.createStatement();
+            stmt.executeUpdate("DELETE FROM "+dbPrefix+"notes WHERE id="+currentNote.getId());
+        }
     }
 
     public static void main(String[] args) {
